@@ -2,9 +2,12 @@ mod asset_loading;
 
 use bevy::prelude::*;
 use bevy::color::palettes::css;
+use bevy::window::PrimaryWindow;
 use hexgridspiral as hgs;
 use asset_loading::load_assets_for_terrain;
 use asset_loading::get_assets_for_tag;
+use asset_loading::load_tag;
+use asset_loading::AssetTag;
 use asset_loading::Terrain;
 
 const LEVELMAP_TILE_CIRCUMRADIUS: f32 = 50.0;
@@ -21,49 +24,129 @@ fn main() {
                 ..default()
             }),
             ..default()
-        }),
-        MeshPickingPlugin))
+        })))
+        .insert_resource(WorldCoords::default())
+        .insert_resource(HoveredTile::default())
         //.add_plugins((DefaultPlugins, MeshPickingPlugin))
         .add_systems(Startup, setup)
+        .add_systems(Update, cursor_system)
         .run();
+}
+
+#[derive(Resource)]
+pub struct TileImageHandles {
+    pub default: Handle<Image>,
+    pub hover: Handle<Image>,
 }
 
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    //mut meshes: ResMut<Assets<Mesh>>,
+    //mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     // Camera with bluewhite background color.
     commands.spawn((
         Camera2d,
         Camera {
-            clear_color: ClearColorConfig::Custom(Color::srgb(0.2, 0.2, 0.23)),
+            clear_color: ClearColorConfig::Custom(Color::srgb(0.7, 0.7, 0.73)),
             ..Default::default()
         },
+        MainCamera,
     ));
 
     // Compute reusable shape
-    let shape = meshes.add(RegularPolygon::new(LEVELMAP_TILE_CIRCUMRADIUS, 6));
+    //let shape = meshes.add(RegularPolygon::new(LEVELMAP_TILE_CIRCUMRADIUS, 6));
 
     // Load Assets
-    let image_handles = load_assets_for_terrain(Terrain::Blank, &asset_server);
+    let blank_handle = load_assets_for_terrain(Terrain::Blank, &asset_server)[0].clone();
+    let lush_handle = load_tag(AssetTag::BaseLush, &asset_server);
+
+    commands.insert_resource(TileImageHandles { default: blank_handle.clone(), hover: lush_handle.clone() });
 
     // Compute step-size from tile center to tile center, given circumradius of a tile.
-    let tile_inradius = RegularPolygon::new(LEVELMAP_TILE_CIRCUMRADIUS, 6).inradius();
-    let step_size = 2. * tile_inradius + 3.;
+    //let tile_inradius = RegularPolygon::new(LEVELMAP_TILE_CIRCUMRADIUS, 6).inradius();
+    //let step_size = 2. * tile_inradius + 3.;
+    //log::warn!("step_size {} hover", step_size);
+    let scale = 0.25 as f64;
+    let image_size = ((466. * scale) / (3.0 as f64).sqrt(), (554. * scale) / 2.);
+    let step_x:f64 = (457. * scale) / (3.0 as f64).sqrt();
+    let step_y:f64 = (484. * scale) / 2.;
 
     // Spawn tiles
     for tile_index in 0..NUM_TILES {
         spawn_tile_with_index(
             &mut commands,
             &hgs::TileIndex::from(tile_index),
-            step_size,
-            image_handles[0].clone(),
-            &mut materials,
-            shape.clone(),
+            image_size,
+            (step_x, step_y),
+            blank_handle.clone(),
+            lush_handle.clone(),
         );
     }
+}
+
+#[derive(Resource, Default)]
+struct WorldCoords(Vec2);
+
+#[derive(Resource, Default)]
+struct HoveredTile {
+    entity: Option<hgs::CCTile>,
+}
+
+#[derive(Component)]
+struct MainCamera;
+
+fn cursor_system(
+    mut coords: ResMut<WorldCoords>,
+    mut hovered_tile: ResMut<HoveredTile>,
+    tile_image_handles: Res<TileImageHandles>,
+    // query for TileMarkers
+    mut q_all_tiles: Query<(&TileMarker, &mut Sprite)>,
+    // query to get the window (so we can read the current cursor position)
+    q_window: Query<&Window, With<PrimaryWindow>>,
+    // query to get camera transform
+    q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+) {
+    // get the camera info and transform
+    // assuming there is exactly one main camera entity
+    let (camera, camera_transform) = q_camera.single();
+    let window = q_window.single();
+
+    // check if the cursor is inside the window and get its position
+    // then, ask bevy to convert into world coordinates
+    if let Some(world_position) = window.cursor_position()
+        .and_then(|cursor| {
+            camera.viewport_to_world(camera_transform, cursor).ok()
+        })
+        .map(|ray| ray.origin.truncate())
+        {
+            let scale = 0.25 as f64;
+            let step_x:f64 = (457. * scale) / (3.0 as f64).sqrt(); // 65.9642
+            let step_y:f64 = (484. * scale) / 2.; // 60.5
+
+            coords.0 = world_position;
+            // log::warn!("World coords: {}/{}", world_position.x, world_position.y);
+            let new_hover_tile: hgs::HGSTile = hgs::CCTile::from_irregular_pixel(
+                (world_position.x as f64, world_position.y as f64),
+                (0., 0.),
+                (step_x, step_y)
+            ).into();
+
+            let selected_index: hgs::TileIndex = new_hover_tile.spiral_index();
+            // log::warn!("Selected Index: {}", selected_index.0);
+
+            // Reset all tiles' colors to plain blue
+            // Except if they are in reachable range
+            for (tile_marker, mut sprite) in q_all_tiles.iter_mut() {
+                if selected_index.0 == tile_marker.0.0 {
+                    sprite.image = tile_image_handles.hover.clone();
+                }
+                else {
+                    sprite.image = tile_image_handles.default.clone();
+                }
+            }
+        }
 }
 
 #[derive(Component)]
@@ -73,27 +156,21 @@ struct TileMarker(hgs::TileIndex);
 fn spawn_tile_with_index(
     commands: &mut Commands,
     tile_index: &hgs::TileIndex,
-    step_size: f32,
-    texture_handle: Handle<Image>,
-    materials: &mut ResMut<Assets<ColorMaterial>>,
-    shape: Handle<Mesh>,
+    image_size: (f64, f64),
+    step_size: (f64, f64),
+    blank_handle: Handle<Image>,
+    lush_handle: Handle<Image>,
 ) {
     let t = hgs::HGSTile::new(*tile_index)
         .cc()
-        .to_pixel((0., 0.), step_size.into());
+        .to_irregular_pixel((0., 0.), step_size);
     let position = Vec3::new(t.0 as f32, t.1 as f32, 0.);
-
-    // Add material that uses the blank tile texture
-    let tile_material = materials.add(ColorMaterial {
-        texture: Some(texture_handle.clone()),
-        ..Default::default()
-    });
 
     // Create hexagonal tile with a text as child node
     let mut tile_node = commands.spawn((
         Sprite {
-            image: texture_handle.clone(),
-            custom_size: Some(Vec2::new(80.0, 80.0)),
+            image: blank_handle.clone(),
+            custom_size: Some(Vec2::new(image_size.0 as f32, image_size.1 as f32)),
             image_mode: SpriteImageMode::Auto,
             ..default()
         },
@@ -108,45 +185,59 @@ fn spawn_tile_with_index(
             // avoid z-fighting. The child transform is relative to the parent.
             Transform::from_xyz(0., 0., 0.0001),
         ));
+
+        // Cube Coordinates text node
+        let cctile = hgs::CCTile::new(*tile_index);
+        let (q, r, s) = cctile.into_qrs_tuple();
+        let fontsize = 16.;
+
+        let tl_pos = (hgs::CCTile::unit(&hgs::RingCornerIndex::TOPLEFT))
+            .to_irregular_pixel((0., 0.), step_size);
+        let r_pos =
+            (hgs::CCTile::unit(&hgs::RingCornerIndex::RIGHT))
+            .to_irregular_pixel((0., 0.), step_size);
+        let bl_pos = (hgs::CCTile::unit(&hgs::RingCornerIndex::BOTTOMLEFT))
+            .to_irregular_pixel((0., 0.), step_size);
+        // only go less than half of the way toward the neightouring tile.
+        let distance = 0.33;
+
+        parent.spawn((
+            Text2d::new(format!("{q}")),
+            TextColor(css::GREEN.into()),
+            Transform::from_xyz(
+                distance * tl_pos.0 as f32,
+                distance * tl_pos.1 as f32,
+                0.0001,
+            ),
+            TextFont {
+                font_size: fontsize,
+                ..Default::default()
+            },
+        ));
+
+        parent.spawn((
+            Text2d::new(format!("{r}")),
+            TextColor(css::MEDIUM_TURQUOISE.into()),
+            Transform::from_xyz(distance * r_pos.0 as f32, distance * r_pos.1 as f32, 0.0001),
+            TextFont {
+                font_size: fontsize,
+                ..Default::default()
+            },
+        ));
+        parent.spawn((
+            Text2d::new(format!("{s}")),
+            TextColor(css::DEEP_PINK.into()),
+            Transform::from_xyz(
+                distance * bl_pos.0 as f32,
+                distance * bl_pos.1 as f32,
+                0.0001,
+            ),
+            TextFont {
+                font_size: fontsize,
+                ..Default::default()
+            },
+        ));
     });
-
-    //// on hover, change color
-    //let mut color_handle1 = color_handle.clone();
-    //tile_node.observe(
-    //    move |over: Trigger<Pointer<Over>>,
-    //          mut q: Query<(&TileMarker,)>,
-    //          mut materials: ResMut<Assets<ColorMaterial>>| {
-    //        let (index,) = q
-    //            .get_mut(over.entity())
-    //            .expect("Entity that was hovered over no longer seems to exist...");
-    //        log::debug!("Labelmap Tile {} hover", index.0);
-    //        let color_green = Color::hsl(360. * 4. / 8. as f32, 0.95, 0.7);
-    //        // Assumption that there is always a material associated with the TileMarker
-    //        // Entity.
-    //        let color_material = materials.get_mut(&mut color_handle1).unwrap();
-    //        color_material.color = color_green;
-    //    },
-    //);
-//
-    //// on unhover, remove color change
-    //let mut color_handle2 = color_handle.clone();
-    //tile_node.observe(
-    //    move |out: Trigger<Pointer<Out>>,
-    //          mut q: Query<(&TileMarker,)>,
-    //          mut materials: ResMut<Assets<ColorMaterial>>| {
-    //        let (index,) = q
-    //            .get_mut(out.entity())
-    //            .expect("Entity that was hovered over no longer seems to exist...");
-    //        log::debug!("Labelmap Tile {} hover", index.0);
-    //        let color_material = materials
-    //            .get_mut(&mut color_handle2)
-    //            .expect("A tile without color?!");
-    //        let color_blue = Color::hsl(360. * 5. / 8. as f32, 0.95, 0.7);
-    //        color_material.color = color_blue;
-    //    },
-    //);
-
-    tile_node.observe(highlight_on_tile_click);
 }
 
 /// Forward the on_click trigger event, with forced order of execution.

@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 bevy = "0.15"
 getrandom = { version = "0.3.3", features = ["wasm_js"] }
-hexgridspiral = { version = "0.2.6" }
+hexgridspiral = { git = "https://github.com/D0ubleD0uble/hexgridspiral.git", branch = "feature/support_unregular_hexes" }
 log = { version = "*", features = ["max_level_debug", "release_max_level_warn"] }
 
 [profile.dev.package."*"]

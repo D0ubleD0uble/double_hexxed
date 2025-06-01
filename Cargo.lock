@@ -2352,9 +2352,8 @@ checksum = "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df"
 
 [[package]]
 name = "hexgridspiral"
-version = "0.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51b30ac1603c0679d20f2a6f62dff423487eeb5e008e485985cb8a0ac6e6e83d"
+version = "0.3.0"
+source = "git+https://github.com/D0ubleD0uble/hexgridspiral.git?branch=feature%2Fsupport_unregular_hexes#00da7335f15b318c1004d40f60b5c94adc58865c"
 dependencies = [
  "approx_eq",
  "cfg-if",
