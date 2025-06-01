@@ -79,7 +79,7 @@ pub fn get_assets_for_tag(tag: AssetTag) -> Vec<&'static str> {
             "Hex - Mountains, medium (rocky).png",
             "Hex - Mountains, peak (rocky).png",
         ],
-        _ => vec!["Hex - Base (blank) rotated.png"],
+        AssetTag::Blank | _ => vec!["Hex - Base (blank) rotated.png"],
     }
 }
 
@@ -102,8 +102,9 @@ pub fn load_assets_for_terrain(
 pub fn load_tag(
     asset_tag: AssetTag,
     asset_server: &AssetServer,
-) -> Handle<Image> {
-    let asset_path = get_assets_for_tag(asset_tag)[0];
-    let handle = asset_server.load(format!("hextiles_cropped/{}", asset_path));
-    return handle
+) -> Vec<Handle<Image>> {
+    get_assets_for_tag(asset_tag)
+        .iter()
+        .map(|asset_path| asset_server.load(format!("hextiles_cropped/{}", asset_path)))
+        .collect()
 }

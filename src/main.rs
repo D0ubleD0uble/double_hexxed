@@ -1,30 +1,33 @@
 mod asset_loading;
 
-use bevy::prelude::*;
-use bevy::color::palettes::css;
-use bevy::window::PrimaryWindow;
-use hexgridspiral as hgs;
-use asset_loading::load_assets_for_terrain;
-use asset_loading::get_assets_for_tag;
-use asset_loading::load_tag;
 use asset_loading::AssetTag;
 use asset_loading::Terrain;
+use asset_loading::get_assets_for_tag;
+use asset_loading::load_assets_for_terrain;
+use asset_loading::load_tag;
+use bevy::color::palettes::css;
+use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
+use hexgridspiral as hgs;
+use std::collections::HashMap;
 
 const LEVELMAP_TILE_CIRCUMRADIUS: f32 = 50.0;
 const NUM_TILES: u64 = 61;
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                // fill the entire browser window
-                fit_canvas_to_parent: true,
-                // don't hijack keyboard shortcuts like F5, F6, F12, Ctrl+R etc.
-                // prevent_default_event_handling: false,
+        .add_plugins(
+            (DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    // fill the entire browser window
+                    fit_canvas_to_parent: true,
+                    // don't hijack keyboard shortcuts like F5, F6, F12, Ctrl+R etc.
+                    // prevent_default_event_handling: false,
+                    ..default()
+                }),
                 ..default()
-            }),
-            ..default()
-        })))
+            })),
+        )
         .insert_resource(WorldCoords::default())
         .insert_resource(HoveredTile::default())
         //.add_plugins((DefaultPlugins, MeshPickingPlugin))
@@ -35,8 +38,7 @@ fn main() {
 
 #[derive(Resource)]
 pub struct TileImageHandles {
-    pub default: Handle<Image>,
-    pub hover: Handle<Image>,
+    pub handles: HashMap<AssetTag, Vec<Handle<Image>>>,
 }
 
 fn setup(
@@ -59,10 +61,20 @@ fn setup(
     //let shape = meshes.add(RegularPolygon::new(LEVELMAP_TILE_CIRCUMRADIUS, 6));
 
     // Load Assets
-    let blank_handle = load_assets_for_terrain(Terrain::Blank, &asset_server)[0].clone();
-    let lush_handle = load_tag(AssetTag::BaseLush, &asset_server);
-
-    commands.insert_resource(TileImageHandles { default: blank_handle.clone(), hover: lush_handle.clone() });
+    let tags_to_load = vec![
+        AssetTag::Blank,
+        AssetTag::BaseLush,
+        AssetTag::PlainsLush,
+        AssetTag::MountainRocky,
+    ];
+    let tag_to_handles: HashMap<AssetTag, Vec<Handle<Image>>> = tags_to_load
+        .into_iter()
+        .map(|tag| (tag, load_tag(tag, &asset_server)))
+        .collect();
+    let start_image = get_image_handle(&tag_to_handles, &AssetTag::Blank, 0).unwrap();
+    commands.insert_resource(TileImageHandles {
+        handles: tag_to_handles,
+    });
 
     // Compute step-size from tile center to tile center, given circumradius of a tile.
     //let tile_inradius = RegularPolygon::new(LEVELMAP_TILE_CIRCUMRADIUS, 6).inradius();
@@ -70,20 +82,19 @@ fn setup(
     //log::warn!("step_size {} hover", step_size);
     let scale = 0.25 as f64;
     let image_size = ((466. * scale) / (3.0 as f64).sqrt(), (554. * scale) / 2.);
-    let step_x:f64 = (457. * scale) / (3.0 as f64).sqrt();
-    let step_y:f64 = (484. * scale) / 2.;
+    let step_x: f64 = (457. * scale) / (3.0 as f64).sqrt();
+    let step_y: f64 = (484. * scale) / 2.;
 
     // Spawn tiles
-    for tile_index in 0..NUM_TILES {
+    let blank_handle = for tile_index in 0..NUM_TILES {
         spawn_tile_with_index(
             &mut commands,
             &hgs::TileIndex::from(tile_index),
             image_size,
             (step_x, step_y),
-            blank_handle.clone(),
-            lush_handle.clone(),
+            start_image.clone(),
         );
-    }
+    };
 }
 
 #[derive(Resource, Default)]
@@ -115,38 +126,53 @@ fn cursor_system(
 
     // check if the cursor is inside the window and get its position
     // then, ask bevy to convert into world coordinates
-    if let Some(world_position) = window.cursor_position()
-        .and_then(|cursor| {
-            camera.viewport_to_world(camera_transform, cursor).ok()
-        })
+    if let Some(world_position) = window
+        .cursor_position()
+        .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
         .map(|ray| ray.origin.truncate())
-        {
-            let scale = 0.25 as f64;
-            let step_x:f64 = (457. * scale) / (3.0 as f64).sqrt(); // 65.9642
-            let step_y:f64 = (484. * scale) / 2.; // 60.5
+    {
+        let scale = 0.25 as f64;
+        let step_x: f64 = (457. * scale) / (3.0 as f64).sqrt(); // 65.9642
+        let step_y: f64 = (484. * scale) / 2.; // 60.5
 
-            coords.0 = world_position;
-            // log::warn!("World coords: {}/{}", world_position.x, world_position.y);
-            let new_hover_tile: hgs::HGSTile = hgs::CCTile::from_irregular_pixel(
-                (world_position.x as f64, world_position.y as f64),
-                (0., 0.),
-                (step_x, step_y)
-            ).into();
+        coords.0 = world_position;
+        // log::warn!("World coords: {}/{}", world_position.x, world_position.y);
+        let new_hover_tile: hgs::HGSTile = hgs::CCTile::from_irregular_pixel(
+            (world_position.x as f64, world_position.y as f64),
+            (0., 0.),
+            (step_x, step_y),
+        )
+        .into();
 
-            let selected_index: hgs::TileIndex = new_hover_tile.spiral_index();
-            // log::warn!("Selected Index: {}", selected_index.0);
+        let selected_index: hgs::TileIndex = new_hover_tile.spiral_index();
+        // log::warn!("Selected Index: {}", selected_index.0);
 
-            // Reset all tiles' colors to plain blue
-            // Except if they are in reachable range
-            for (tile_marker, mut sprite) in q_all_tiles.iter_mut() {
-                if selected_index.0 == tile_marker.0.0 {
-                    sprite.image = tile_image_handles.hover.clone();
-                }
-                else {
-                    sprite.image = tile_image_handles.default.clone();
+        // Reset all tiles' colors to plain blue
+        // Except if they are in reachable range
+        for (tile_marker, mut sprite) in q_all_tiles.iter_mut() {
+            let asset_tag = if selected_index.0 == tile_marker.0.0 {
+                &AssetTag::BaseLush
+            } else {
+                &AssetTag::Blank
+            };
+            if let Some(handles) = tile_image_handles.handles.get(asset_tag) {
+                if let Some(first_handle) = handles.get(0) {
+                    sprite.image = first_handle.clone();
                 }
             }
         }
+    }
+}
+
+fn get_image_handle(
+    tag_to_handles: &HashMap<AssetTag, Vec<Handle<Image>>>,
+    asset_tag: &AssetTag,
+    index: usize,
+) -> Option<Handle<Image>> {
+    tag_to_handles
+        .get(asset_tag)
+        .and_then(|handles| handles.get(index))
+        .cloned()
 }
 
 #[derive(Component)]
@@ -158,8 +184,7 @@ fn spawn_tile_with_index(
     tile_index: &hgs::TileIndex,
     image_size: (f64, f64),
     step_size: (f64, f64),
-    blank_handle: Handle<Image>,
-    lush_handle: Handle<Image>,
+    start_image: Handle<Image>,
 ) {
     let t = hgs::HGSTile::new(*tile_index)
         .cc()
@@ -169,7 +194,7 @@ fn spawn_tile_with_index(
     // Create hexagonal tile with a text as child node
     let mut tile_node = commands.spawn((
         Sprite {
-            image: blank_handle.clone(),
+            image: start_image.clone(),
             custom_size: Some(Vec2::new(image_size.0 as f32, image_size.1 as f32)),
             image_mode: SpriteImageMode::Auto,
             ..default()
@@ -177,7 +202,7 @@ fn spawn_tile_with_index(
         Transform::from_translation(position),
         TileMarker(*tile_index),
     ));
-    tile_node.with_children( |parent| {
+    tile_node.with_children(|parent| {
         // Tile Index text node
         parent.spawn((
             Text2d::new(format!("{}", tile_index)),
@@ -186,57 +211,57 @@ fn spawn_tile_with_index(
             Transform::from_xyz(0., 0., 0.0001),
         ));
 
-        // Cube Coordinates text node
-        let cctile = hgs::CCTile::new(*tile_index);
-        let (q, r, s) = cctile.into_qrs_tuple();
-        let fontsize = 16.;
+        //// Cube Coordinates text node
+        //let cctile = hgs::CCTile::new(*tile_index);
+        //let (q, r, s) = cctile.into_qrs_tuple();
+        //let fontsize = 16.;
 
-        let tl_pos = (hgs::CCTile::unit(&hgs::RingCornerIndex::TOPLEFT))
-            .to_irregular_pixel((0., 0.), step_size);
-        let r_pos =
-            (hgs::CCTile::unit(&hgs::RingCornerIndex::RIGHT))
-            .to_irregular_pixel((0., 0.), step_size);
-        let bl_pos = (hgs::CCTile::unit(&hgs::RingCornerIndex::BOTTOMLEFT))
-            .to_irregular_pixel((0., 0.), step_size);
-        // only go less than half of the way toward the neightouring tile.
-        let distance = 0.33;
+        //let tl_pos = (hgs::CCTile::unit(&hgs::RingCornerIndex::TOPLEFT))
+        //    .to_irregular_pixel((0., 0.), step_size);
+        //let r_pos =
+        //    (hgs::CCTile::unit(&hgs::RingCornerIndex::RIGHT))
+        //    .to_irregular_pixel((0., 0.), step_size);
+        //let bl_pos = (hgs::CCTile::unit(&hgs::RingCornerIndex::BOTTOMLEFT))
+        //    .to_irregular_pixel((0., 0.), step_size);
+        //// only go less than half of the way toward the neightouring tile.
+        //let distance = 0.33;
 
-        parent.spawn((
-            Text2d::new(format!("{q}")),
-            TextColor(css::GREEN.into()),
-            Transform::from_xyz(
-                distance * tl_pos.0 as f32,
-                distance * tl_pos.1 as f32,
-                0.0001,
-            ),
-            TextFont {
-                font_size: fontsize,
-                ..Default::default()
-            },
-        ));
+        //parent.spawn((
+        //    Text2d::new(format!("{q}")),
+        //    TextColor(css::GREEN.into()),
+        //    Transform::from_xyz(
+        //        distance * tl_pos.0 as f32,
+        //        distance * tl_pos.1 as f32,
+        //        0.0001,
+        //    ),
+        //    TextFont {
+        //        font_size: fontsize,
+        //        ..Default::default()
+        //    },
+        //));
 
-        parent.spawn((
-            Text2d::new(format!("{r}")),
-            TextColor(css::MEDIUM_TURQUOISE.into()),
-            Transform::from_xyz(distance * r_pos.0 as f32, distance * r_pos.1 as f32, 0.0001),
-            TextFont {
-                font_size: fontsize,
-                ..Default::default()
-            },
-        ));
-        parent.spawn((
-            Text2d::new(format!("{s}")),
-            TextColor(css::DEEP_PINK.into()),
-            Transform::from_xyz(
-                distance * bl_pos.0 as f32,
-                distance * bl_pos.1 as f32,
-                0.0001,
-            ),
-            TextFont {
-                font_size: fontsize,
-                ..Default::default()
-            },
-        ));
+        //parent.spawn((
+        //    Text2d::new(format!("{r}")),
+        //    TextColor(css::MEDIUM_TURQUOISE.into()),
+        //    Transform::from_xyz(distance * r_pos.0 as f32, distance * r_pos.1 as f32, 0.0001),
+        //    TextFont {
+        //        font_size: fontsize,
+        //        ..Default::default()
+        //    },
+        //));
+        //parent.spawn((
+        //    Text2d::new(format!("{s}")),
+        //    TextColor(css::DEEP_PINK.into()),
+        //    Transform::from_xyz(
+        //        distance * bl_pos.0 as f32,
+        //        distance * bl_pos.1 as f32,
+        //        0.0001,
+        //    ),
+        //    TextFont {
+        //        font_size: fontsize,
+        //        ..Default::default()
+        //    },
+        //));
     });
 }
 
