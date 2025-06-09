@@ -1,21 +1,36 @@
 mod asset_loading;
 
 use asset_loading::AssetTag;
-use asset_loading::Terrain;
-use asset_loading::get_assets_for_tag;
-use asset_loading::load_assets_for_terrain;
+// use asset_loading::Terrain;
+// use asset_loading::get_assets_for_tag;
+// use asset_loading::load_assets_for_terrain;
 use asset_loading::load_tag;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use hexgridspiral as hgs;
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
+use std::sync::Mutex;
+use wasm_bindgen::prelude::*;
 
-const LEVELMAP_TILE_CIRCUMRADIUS: f32 = 50.0;
 const NUM_TILES: u64 = 61;
+pub static TOOL_QUEUE: Lazy<Mutex<Vec<ToolSelectedEvent>>> = Lazy::new(|| Mutex::new(Vec::new()));
+
+#[wasm_bindgen]
+extern "C" {
+    fn log(s: &str);
+}
+
+#[wasm_bindgen]
+pub fn set_tool(tool: &str) {
+    log::warn!("Tool selected in Rust: {}", tool);
+    let event = ToolSelectedEvent(tool.to_string());
+    TOOL_QUEUE.lock().unwrap().push(event);
+}
 
 fn main() {
-    App::new()
+    let mut app = App::new()
         .add_plugins(
             (DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
@@ -28,10 +43,13 @@ fn main() {
                 ..default()
             })),
         )
+        .add_event::<ToolSelectedEvent>()
         .insert_resource(WorldCoords::default())
         .insert_resource(HoveredTile::default())
-        //.add_plugins((DefaultPlugins, MeshPickingPlugin))
+        .insert_resource(SelectedTool("Erase".into()))
         .add_systems(Startup, setup)
+        .add_systems(Update, flush_tool_events_system)
+        .add_systems(Update, on_tool_selected)
         .add_systems(Update, cursor_system)
         .run();
 }
@@ -41,12 +59,12 @@ pub struct TileImageHandles {
     pub handles: HashMap<AssetTag, Vec<Handle<Image>>>,
 }
 
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    //mut meshes: ResMut<Assets<Mesh>>,
-    //mut materials: ResMut<Assets<ColorMaterial>>,
-) {
+#[derive(Resource)]
+pub struct SelectedTool(pub String);
+#[derive(Event)]
+pub struct ToolSelectedEvent(pub String);
+
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Camera with bluewhite background color.
     commands.spawn((
         Camera2d,
@@ -56,9 +74,6 @@ fn setup(
         },
         MainCamera,
     ));
-
-    // Compute reusable shape
-    //let shape = meshes.add(RegularPolygon::new(LEVELMAP_TILE_CIRCUMRADIUS, 6));
 
     // Load Assets
     let tags_to_load = vec![
@@ -76,17 +91,16 @@ fn setup(
         handles: tag_to_handles,
     });
 
-    // Compute step-size from tile center to tile center, given circumradius of a tile.
-    //let tile_inradius = RegularPolygon::new(LEVELMAP_TILE_CIRCUMRADIUS, 6).inradius();
-    //let step_size = 2. * tile_inradius + 3.;
-    //log::warn!("step_size {} hover", step_size);
-    let scale = 0.25 as f64;
-    let image_size = ((466. * scale) / (3.0 as f64).sqrt(), (554. * scale) / 2.);
-    let step_x: f64 = (457. * scale) / (3.0 as f64).sqrt();
-    let step_y: f64 = (484. * scale) / 2.;
+    let scale = 0.25;
+    let image_size = (
+        (466. * scale * 2.0) / (3.0 as f64).sqrt(),
+        (554. * scale * 2.0) / 2.,
+    );
+    let step_x = (457. * scale) / (3.0_f64).sqrt();
+    let step_y = (484. * scale) / 2.;
 
     // Spawn tiles
-    let blank_handle = for tile_index in 0..NUM_TILES {
+    for tile_index in 0..NUM_TILES {
         spawn_tile_with_index(
             &mut commands,
             &hgs::TileIndex::from(tile_index),
@@ -94,7 +108,7 @@ fn setup(
             (step_x, step_y),
             start_image.clone(),
         );
-    };
+    }
 }
 
 #[derive(Resource, Default)]
@@ -108,12 +122,29 @@ struct HoveredTile {
 #[derive(Component)]
 struct MainCamera;
 
+fn on_tool_selected(
+    mut events: EventReader<ToolSelectedEvent>,
+    mut selected: ResMut<SelectedTool>,
+) {
+    for event in events.read() {
+        log::warn!("Tool selected via event: {}", event.0);
+        selected.0 = event.0.clone(); // Update resource if needed
+    }
+}
+
+fn flush_tool_events_system(mut writer: EventWriter<ToolSelectedEvent>) {
+    let mut queue = TOOL_QUEUE.lock().unwrap();
+    for event in queue.drain(..) {
+        writer.send(event);
+    }
+}
+
 fn cursor_system(
     mut coords: ResMut<WorldCoords>,
     mut hovered_tile: ResMut<HoveredTile>,
     tile_image_handles: Res<TileImageHandles>,
     // query for TileMarkers
-    mut q_all_tiles: Query<(&TileMarker, &mut Sprite)>,
+    mut q_all_tiles: Query<(&TileMarker, &mut Sprite, &mut Transform)>,
     // query to get the window (so we can read the current cursor position)
     q_window: Query<&Window, With<PrimaryWindow>>,
     // query to get camera transform
@@ -138,7 +169,7 @@ fn cursor_system(
         coords.0 = world_position;
         // log::warn!("World coords: {}/{}", world_position.x, world_position.y);
         let new_hover_tile: hgs::HGSTile = hgs::CCTile::from_irregular_pixel(
-            (world_position.x as f64, world_position.y as f64),
+            (world_position.y as f64, -world_position.x as f64),
             (0., 0.),
             (step_x, step_y),
         )
@@ -149,12 +180,19 @@ fn cursor_system(
 
         // Reset all tiles' colors to plain blue
         // Except if they are in reachable range
-        for (tile_marker, mut sprite) in q_all_tiles.iter_mut() {
-            let asset_tag = if selected_index.0 == tile_marker.0.0 {
-                &AssetTag::BaseLush
+        for (tile_marker, mut sprite, mut transform) in q_all_tiles.iter_mut() {
+            let mut asset_tag = &AssetTag::Blank;
+            if selected_index.0 == tile_marker.0.0 {
+                asset_tag = &AssetTag::BaseLush;
+
+                // Pop-out effect
+                transform.translation.z += 1.0;
+                transform.scale = Vec3::splat(1.1);
             } else {
-                &AssetTag::Blank
-            };
+                // Reset pop-out effect
+                transform.translation.z = transform.translation.y * -0.0001;
+                transform.scale = Vec3::ONE;
+            }
             if let Some(handles) = tile_image_handles.handles.get(asset_tag) {
                 if let Some(first_handle) = handles.get(0) {
                     sprite.image = first_handle.clone();
@@ -189,7 +227,12 @@ fn spawn_tile_with_index(
     let t = hgs::HGSTile::new(*tile_index)
         .cc()
         .to_irregular_pixel((0., 0.), step_size);
-    let position = Vec3::new(t.0 as f32, t.1 as f32, 0.);
+    let (x, y, z) = (t.0 as f32, t.1 as f32, (t.0 as f32) * -0.0001);
+
+    // Rotate position 90° CCW around origin (0, 0)
+    let rotated_position = Vec3::new(-y, x, z);
+    let rotation = Quat::from_rotation_z(std::f32::consts::FRAC_PI_2);
+    let child_rotation = rotation.inverse();
 
     // Create hexagonal tile with a text as child node
     let mut tile_node = commands.spawn((
@@ -199,7 +242,11 @@ fn spawn_tile_with_index(
             image_mode: SpriteImageMode::Auto,
             ..default()
         },
-        Transform::from_translation(position),
+        Transform {
+            translation: rotated_position,
+            rotation,
+            ..default()
+        },
         TileMarker(*tile_index),
     ));
     tile_node.with_children(|parent| {
@@ -208,60 +255,12 @@ fn spawn_tile_with_index(
             Text2d::new(format!("{}", tile_index)),
             TextColor(css::DIM_GRAY.into()),
             // avoid z-fighting. The child transform is relative to the parent.
-            Transform::from_xyz(0., 0., 0.0001),
+            Transform {
+                translation: Vec3::new(0., 0., 0.0001),
+                rotation: child_rotation,
+                ..default()
+            },
         ));
-
-        //// Cube Coordinates text node
-        //let cctile = hgs::CCTile::new(*tile_index);
-        //let (q, r, s) = cctile.into_qrs_tuple();
-        //let fontsize = 16.;
-
-        //let tl_pos = (hgs::CCTile::unit(&hgs::RingCornerIndex::TOPLEFT))
-        //    .to_irregular_pixel((0., 0.), step_size);
-        //let r_pos =
-        //    (hgs::CCTile::unit(&hgs::RingCornerIndex::RIGHT))
-        //    .to_irregular_pixel((0., 0.), step_size);
-        //let bl_pos = (hgs::CCTile::unit(&hgs::RingCornerIndex::BOTTOMLEFT))
-        //    .to_irregular_pixel((0., 0.), step_size);
-        //// only go less than half of the way toward the neightouring tile.
-        //let distance = 0.33;
-
-        //parent.spawn((
-        //    Text2d::new(format!("{q}")),
-        //    TextColor(css::GREEN.into()),
-        //    Transform::from_xyz(
-        //        distance * tl_pos.0 as f32,
-        //        distance * tl_pos.1 as f32,
-        //        0.0001,
-        //    ),
-        //    TextFont {
-        //        font_size: fontsize,
-        //        ..Default::default()
-        //    },
-        //));
-
-        //parent.spawn((
-        //    Text2d::new(format!("{r}")),
-        //    TextColor(css::MEDIUM_TURQUOISE.into()),
-        //    Transform::from_xyz(distance * r_pos.0 as f32, distance * r_pos.1 as f32, 0.0001),
-        //    TextFont {
-        //        font_size: fontsize,
-        //        ..Default::default()
-        //    },
-        //));
-        //parent.spawn((
-        //    Text2d::new(format!("{s}")),
-        //    TextColor(css::DEEP_PINK.into()),
-        //    Transform::from_xyz(
-        //        distance * bl_pos.0 as f32,
-        //        distance * bl_pos.1 as f32,
-        //        0.0001,
-        //    ),
-        //    TextFont {
-        //        font_size: fontsize,
-        //        ..Default::default()
-        //    },
-        //));
     });
 }
 

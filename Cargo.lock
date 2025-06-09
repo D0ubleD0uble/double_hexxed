@@ -1828,6 +1828,8 @@ dependencies = [
  "getrandom 0.3.3",
  "hexgridspiral",
  "log",
+ "once_cell",
+ "wasm-bindgen",
 ]
 
 [[package]]
