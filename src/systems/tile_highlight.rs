@@ -22,7 +22,7 @@ fn highlight_movement_range_on_tile_click(
     // Check the current tile's index
     let clicked = q_all_tiles.get(trigger.entity());
     let (clicked_tile, clicked_material) = clicked.expect("Nothing was clicked?!");
-    let selected_index: hgs::TileIndex = clicked_tile.0;
+    let selected_index: hgs::TileIndex = clicked_tile.index;
 
     // EXAMPLE 2:
     // Compute all reachable tiles, using hexgridspiral.
@@ -32,7 +32,7 @@ fn highlight_movement_range_on_tile_click(
     // Reset all tiles' colors to plain blue
     // Except if they are in reachable range
     for (tile_marker, material_handle) in q_all_tiles.iter() {
-        let tile_index = tile_marker.0;
+        let tile_index = tile_marker.index;
 
         if movement_range.contains(&hgs::CCTile::new(tile_index)) {
             let color_reachable_yellow = Color::hsl(360. * 1. / 8. as f32, 0.95, 0.7);
@@ -65,7 +65,7 @@ fn highlight_axes_on_tile_click(
     // Check the current tile's index
     let clicked = q_all_tiles.get(trigger.entity());
     let (clicked_tile, _clicked_material) = clicked.expect("Nothing was clicked?!");
-    let selected_index: hgs::TileIndex = clicked_tile.0;
+    let selected_index: hgs::TileIndex = clicked_tile.index;
 
     // Compute the CubeCoordinates
     let cctile = hgs::CCTile::new(selected_index);
@@ -77,7 +77,7 @@ fn highlight_axes_on_tile_click(
     // Set all colors to a darker hue if they are reachable in a straight line from the
     // clicked tile.
     for (tile_marker, material_handle) in q_all_tiles.iter() {
-        let (qq, rr, ss) = hgs::CCTile::new(tile_marker.0).into_qrs_tuple();
+        let (qq, rr, ss) = hgs::CCTile::new(tile_marker.index).into_qrs_tuple();
 
         // EXAMPLE 3:
         if qq == q || rr == r || ss == s {

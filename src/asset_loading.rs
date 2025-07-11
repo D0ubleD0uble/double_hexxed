@@ -43,6 +43,26 @@ pub enum AssetTag {
     // etc...
 }
 
+impl AssetTag {
+    pub fn from_str(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "erase" => AssetTag::Blank,
+            "mountain peak" => AssetTag::MountainRocky,
+            "lush plains" => AssetTag::PlainsLush,
+            _ => AssetTag::Blank,
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            AssetTag::Blank => "Erase",
+            AssetTag::MountainRocky => "Mountain Peak",
+            AssetTag::PlainsLush => "Lush Plains",
+            _ => "Unknown",
+        }
+    }
+}
+
 fn terrain_to_tags(terrain: Terrain) -> Vec<AssetTag> {
     use Terrain::*;
     match terrain {

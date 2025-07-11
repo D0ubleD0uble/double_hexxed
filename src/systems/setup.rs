@@ -102,7 +102,10 @@ fn spawn_tile_with_index(
             rotation,
             ..default()
         },
-        TileMarker(*tile_index),
+        TileMarker {
+            index: *tile_index,
+            tag: AssetTag::Blank,
+        },
     ));
 
     tile_node.with_children(|parent| {

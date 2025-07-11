@@ -13,7 +13,7 @@ pub struct TileImageHandles {
 
 /// Tracks the user’s selected tool.
 #[derive(Resource)]
-pub struct SelectedTool(pub String);
+pub struct SelectedHex(pub AssetTag);
 
 /// Stores current world cursor position.
 #[derive(Resource, Default)]

@@ -5,17 +5,19 @@ mod systems;
 
 use bevy::prelude::*;
 use once_cell::sync::Lazy;
-use resources::{HoveredTile, SelectedTool, WorldCoords};
+use resources::{HoveredTile, SelectedHex, WorldCoords};
 use std::sync::Mutex;
 use systems::{
     cursor::cursor_system,
     setup::setup,
-    tools::{ToolSelectedEvent, flush_tool_events_system, on_tool_selected},
+    tools::{HexSelectedEvent, flush_click_events_system, on_hex_selected},
 };
 use wasm_bindgen::prelude::*;
 
+use crate::asset_loading::AssetTag;
+
 /// Global queue used to forward tool events from JavaScript to Bevy.
-pub static TOOL_QUEUE: Lazy<Mutex<Vec<ToolSelectedEvent>>> = Lazy::new(|| Mutex::new(Vec::new()));
+pub static TOOL_QUEUE: Lazy<Mutex<Vec<HexSelectedEvent>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
 /// External JavaScript function used for logging (when compiled to WebAssembly).
 #[wasm_bindgen]
@@ -27,7 +29,7 @@ extern "C" {
 #[wasm_bindgen]
 pub fn set_tool(tool: &str) {
     log::warn!("Tool selected in Rust: {}", tool);
-    let event = ToolSelectedEvent(tool.to_string());
+    let event = HexSelectedEvent(tool.to_string());
     TOOL_QUEUE.lock().unwrap().push(event);
 }
 
@@ -45,13 +47,13 @@ fn main() {
                 ..default()
             })),
         )
-        .add_event::<ToolSelectedEvent>()
+        .add_event::<HexSelectedEvent>()
         .insert_resource(WorldCoords::default())
         .insert_resource(HoveredTile::default())
-        .insert_resource(SelectedTool("Erase".into()))
+        .insert_resource(SelectedHex(AssetTag::from_str("Erase")))
         .add_systems(Startup, setup)
-        .add_systems(Update, flush_tool_events_system)
-        .add_systems(Update, on_tool_selected)
+        .add_systems(Update, flush_click_events_system)
+        .add_systems(Update, on_hex_selected)
         .add_systems(Update, cursor_system)
         .run();
 }
