@@ -1,7 +1,7 @@
 use crate::asset_loading::AssetTag;
 use bevy::prelude::*;
 use hexgridspiral as hgs;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub const NUM_TILES: u64 = 61;
 

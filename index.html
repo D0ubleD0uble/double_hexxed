@@ -45,11 +45,63 @@
           margin: 5px 0;
           width: 100%;
       }
+
+      #help-button {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        background-color: rgba(50, 50, 50, 0.85);
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        text-align: center;
+        line-height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        z-index: 20;
+        font-family: sans-serif;
+        box-shadow: 0 0 6px rgba(0,0,0,0.5);
+        user-select: none;
+    }
+
+    #help-button:hover {
+        background-color: rgba(70, 70, 70, 0.95);
+    }
+
+    #controls {
+        position: absolute;
+        bottom: 70px;
+        right: 20px;
+        width: 240px;
+        background-color: rgba(30, 30, 30, 0.95);
+        color: white;
+        padding: 10px;
+        box-sizing: border-box;
+        z-index: 15;
+        font-family: sans-serif;
+        font-size: 14px;
+        border-radius: 6px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.4);
+    }
     </style>
 </head>
 
 <body>
     <div id="toolbox"></div>
+
+    <div id="help-button">?</div>
+    <div id="controls" style="display: none;">
+        <h2>Controls</h2>
+        <ul>
+            <li><b>WASD / Arrow Keys</b>: Move camera</li>
+            <li><b>Mouse Wheel</b>: Zoom in/out</li>
+            <li><b>Mouse Click</b>: Paint selected tile</li>
+            <li><b>Hover</b>: Highlight tile</li>
+            <li><b>Right Click</b>: Prevented (reserved)</li>
+        </ul>
+    </div>
 
     {{ NO_MODULE }}
     <script type="module">
@@ -67,7 +119,8 @@
             // Custom UI logic
             // TOOLS must match asset_loading "AssetTag"
             const TOOLS = [
-                "Erase",
+                "Outline",
+                "Blank (white)",
                 "Mountain Foothills",
                 "Mountain Low",
                 "Mountain Medium",
@@ -287,6 +340,19 @@
                 document.addEventListener(eventName, resumeAllContexts);
             });
         })();
+    </script>
+
+    <script>
+        const helpButton = document.getElementById("help-button");
+        const controlsPanel = document.getElementById("controls");
+
+        helpButton.addEventListener("click", () => {
+            if (controlsPanel.style.display === "none") {
+                controlsPanel.style.display = "block";
+            } else {
+                controlsPanel.style.display = "none";
+            }
+        });
     </script>
 </body>
 

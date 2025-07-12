@@ -2,8 +2,9 @@ mod asset_loading;
 mod components;
 mod resources;
 mod systems;
+mod tile_config;
 
-use bevy::prelude::*;
+use bevy::{input::mouse::MouseWheel, prelude::*};
 use once_cell::sync::Lazy;
 use resources::{HoveredTile, SelectedHex, WorldCoords};
 use std::sync::Mutex;
@@ -47,6 +48,7 @@ fn main() {
                 ..default()
             })),
         )
+        .add_event::<MouseWheel>()
         .add_event::<HexSelectedEvent>()
         .insert_resource(WorldCoords::default())
         .insert_resource(HoveredTile::default())

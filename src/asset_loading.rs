@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AssetTag {
+    Outline,
     Blank,
     BaseLush,
     BaseOcean,
@@ -31,7 +32,8 @@ pub enum AssetTag {
 impl AssetTag {
     pub fn from_str(s: &str) -> Self {
         match s.to_lowercase().as_str() {
-            "erase" => AssetTag::Blank,
+            "outline" => AssetTag::Outline,
+            "blank (white)" => AssetTag::Blank,
             "mountain foothills" => AssetTag::MountainFoothillsRocky,
             "mountain low" => AssetTag::MountainLowRocky,
             "mountain medium" => AssetTag::MountainMediumRocky,
@@ -44,20 +46,21 @@ impl AssetTag {
         }
     }
 
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            AssetTag::Blank => "Erase",
-            AssetTag::MountainFoothillsRocky => "Mountain Foothills, Rocky",
-            AssetTag::MountainLowRocky => "Mountain Low, Rocky",
-            AssetTag::MountainMediumRocky => "Mountain Medium, Rocky",
-            AssetTag::MountainPeakRocky => "Mountain Peak, Rocky",
-            AssetTag::MountainPeakLush => "Mountain Peak, Lush",
-            AssetTag::MountainPeakSnowy => "Mountain Peak, Snowy",
-            AssetTag::PlainsLush => "Lush Plains",
-            AssetTag::OceanWaves => "Ocean Waves",
-            _ => "Unknown",
-        }
-    }
+    //pub fn as_str(&self) -> &'static str {
+    //    match self {
+    //        AssetTag::Outline => "Outline",
+    //        AssetTag::Blank => "Erase",
+    //        AssetTag::MountainFoothillsRocky => "Mountain Foothills, Rocky",
+    //        AssetTag::MountainLowRocky => "Mountain Low, Rocky",
+    //        AssetTag::MountainMediumRocky => "Mountain Medium, Rocky",
+    //        AssetTag::MountainPeakRocky => "Mountain Peak, Rocky",
+    //        AssetTag::MountainPeakLush => "Mountain Peak, Lush",
+    //        AssetTag::MountainPeakSnowy => "Mountain Peak, Snowy",
+    //        AssetTag::PlainsLush => "Lush Plains",
+    //        AssetTag::OceanWaves => "Ocean Waves",
+    //        _ => "Unknown",
+    //    }
+    //}
 }
 
 pub fn get_asset_for_tag(tag: AssetTag) -> &'static str {
@@ -71,6 +74,7 @@ pub fn get_asset_for_tag(tag: AssetTag) -> &'static str {
         AssetTag::MountainLowRocky => "Hex - Mountains, low (rocky).png",
         AssetTag::MountainFoothillsRocky => "Hex - Mountains, foothills (rocky).png",
         AssetTag::OceanWaves => "Hex - Water - Ocean (waves) 1.png",
+        AssetTag::Outline => "Hex - Base (outline).png",
         AssetTag::Blank | _ => "Hex - Base (blank).png",
     }
 }
