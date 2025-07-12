@@ -52,8 +52,6 @@ pub fn cursor_system(
         let selected_index: hgs::TileIndex = new_hover_tile.spiral_index();
         // log::warn!("Selected Index: {}", selected_index.0);
 
-        // Reset all tiles' colors to plain
-        // Except if they are in reachable range
         for (mut tile_marker, mut sprite, mut transform) in q_all_tiles.iter_mut() {
             if selected_index.0 == tile_marker.index.0 {
                 // tile_marker.tag = AssetTag::BaseLush;
@@ -71,10 +69,8 @@ pub fn cursor_system(
                 transform.translation.z = transform.translation.y * -0.0001;
                 transform.scale = Vec3::ONE;
             }
-            if let Some(handles) = tile_image_handles.handles.get(&tile_marker.tag) {
-                if let Some(first_handle) = handles.get(0) {
-                    sprite.image = first_handle.clone();
-                }
+            if let Some(handle) = tile_image_handles.handles.get(&tile_marker.tag) {
+                sprite.image = handle.clone();
             }
         }
     }

@@ -66,7 +66,17 @@
             await init();
             // Custom UI logic
             // TOOLS must match asset_loading "AssetTag"
-            const TOOLS = ["Erase", "Mountain Foothills", "Mountain Low", "Mountain Medium", "Mountain Peak", "Lush Plains", "Ocean Waves"];
+            const TOOLS = [
+                "Erase",
+                "Mountain Foothills",
+                "Mountain Low",
+                "Mountain Medium",
+                "Mountain Peak, Rocky",
+                "Mountain Peak, Lush",
+                "Mountain Peak, Snowy",
+                "Lush Plains",
+                "Ocean Waves",
+            ];
             const toolbox = document.getElementById("toolbox");
 
             TOOLS.forEach(toolName => {

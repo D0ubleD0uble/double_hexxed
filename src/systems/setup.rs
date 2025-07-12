@@ -24,14 +24,14 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         AssetTag::Blank,
         AssetTag::BaseLush,
         AssetTag::PlainsLush,
-        AssetTag::MountainFoothills,
-        AssetTag::MountainLow,
-        AssetTag::MountainMedium,
-        AssetTag::MountainPeak,
+        AssetTag::MountainFoothillsRocky,
+        AssetTag::MountainLowRocky,
+        AssetTag::MountainMediumRocky,
+        AssetTag::MountainPeakRocky,
         AssetTag::OceanWaves,
     ];
 
-    let tag_to_handles: HashMap<AssetTag, Vec<Handle<Image>>> = tags_to_load
+    let tag_to_handles: HashMap<AssetTag, Handle<Image>> = tags_to_load
         .into_iter()
         .map(|tag| (tag, load_tag(tag, &asset_server)))
         .collect();
@@ -65,14 +65,11 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 /// Extracts an image handle from the asset map for a given tag and index.
 fn get_image_handle(
-    tag_to_handles: &HashMap<AssetTag, Vec<Handle<Image>>>,
+    tag_to_handles: &HashMap<AssetTag, Handle<Image>>,
     asset_tag: &AssetTag,
     index: usize,
 ) -> Option<Handle<Image>> {
-    tag_to_handles
-        .get(asset_tag)
-        .and_then(|handles| handles.get(index))
-        .cloned()
+    tag_to_handles.get(asset_tag).cloned()
 }
 
 /// Spawns a tile entity (sprite + text) at a given hex grid location.

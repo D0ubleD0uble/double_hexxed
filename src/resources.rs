@@ -8,7 +8,7 @@ pub const NUM_TILES: u64 = 61;
 /// Stores handles to tile image assets.
 #[derive(Resource)]
 pub struct TileImageHandles {
-    pub handles: HashMap<AssetTag, Vec<Handle<Image>>>,
+    pub handles: HashMap<AssetTag, Handle<Image>>,
 }
 
 /// Tracks the user’s selected tool.
