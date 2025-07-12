@@ -31,7 +31,10 @@ pub enum AssetTag {
     HillsDesert,
     HillsLush,
     HillsSnowy,
-    MountainRocky,
+    MountainPeak,
+    MountainMedium,
+    MountainLow,
+    MountainFoothills,
     MountainLush,
     MountainSnowy,
     PlainsLush,
@@ -47,8 +50,12 @@ impl AssetTag {
     pub fn from_str(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "erase" => AssetTag::Blank,
-            "mountain peak" => AssetTag::MountainRocky,
+            "mountain foothills" => AssetTag::MountainFoothills,
+            "mountain low" => AssetTag::MountainLow,
+            "mountain medium" => AssetTag::MountainMedium,
+            "mountain peak" => AssetTag::MountainPeak,
             "lush plains" => AssetTag::PlainsLush,
+            "ocean waves" => AssetTag::OceanWaves,
             _ => AssetTag::Blank,
         }
     }
@@ -56,8 +63,12 @@ impl AssetTag {
     pub fn as_str(&self) -> &'static str {
         match self {
             AssetTag::Blank => "Erase",
-            AssetTag::MountainRocky => "Mountain Peak",
+            AssetTag::MountainFoothills => "Mountain Foothills",
+            AssetTag::MountainLow => "Mountain Low",
+            AssetTag::MountainMedium => "Mountain Medium",
+            AssetTag::MountainPeak => "Mountain Peak",
             AssetTag::PlainsLush => "Lush Plains",
+            AssetTag::OceanWaves => "Ocean Waves",
             _ => "Unknown",
         }
     }
@@ -71,7 +82,7 @@ fn terrain_to_tags(terrain: Terrain) -> Vec<AssetTag> {
         Desert => vec![AssetTag::HillsDesert, AssetTag::PlainsDesert],
         Aquatic => vec![AssetTag::BaseOcean, AssetTag::OceanWaves],
         Mountain => vec![
-            AssetTag::MountainRocky,
+            AssetTag::MountainPeak,
             AssetTag::MountainLush,
             AssetTag::MountainSnowy,
         ],
@@ -91,12 +102,16 @@ pub fn get_assets_for_tag(tag: AssetTag) -> Vec<&'static str> {
             //"Hex - Plains (lush) 4.png",
             "Hex - Plains (lush) 5.png",
         ],
-        AssetTag::MountainRocky => vec![
+        AssetTag::MountainPeak => vec![
             //"Hex - Mountains, foothills (rocky).png",
             //"Hex - Mountains, low (rocky).png",
             //"Hex - Mountains, medium (rocky).png",
             "Hex - Mountains, peak (rocky).png",
         ],
+        AssetTag::MountainMedium => vec!["Hex - Mountains, medium (rocky).png"],
+        AssetTag::MountainLow => vec!["Hex - Mountains, low (rocky).png"],
+        AssetTag::MountainFoothills => vec!["Hex - Mountains, foothills (rocky).png"],
+        AssetTag::OceanWaves => vec!["Hex - Water - Ocean (waves) 1.png"],
         AssetTag::Blank | _ => vec!["Hex - Base (blank).png"],
     }
 }

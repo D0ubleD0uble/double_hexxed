@@ -24,7 +24,11 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         AssetTag::Blank,
         AssetTag::BaseLush,
         AssetTag::PlainsLush,
-        AssetTag::MountainRocky,
+        AssetTag::MountainFoothills,
+        AssetTag::MountainLow,
+        AssetTag::MountainMedium,
+        AssetTag::MountainPeak,
+        AssetTag::OceanWaves,
     ];
 
     let tag_to_handles: HashMap<AssetTag, Vec<Handle<Image>>> = tags_to_load
