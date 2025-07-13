@@ -27,24 +27,42 @@
         }
 
         #toolbox {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 200px;
-          height: 100%;
-          background-color: rgba(30, 30, 30, 0.9);
-          color: white;
-          padding: 10px;
-          box-sizing: border-box;
-          z-index: 10;
-          font-family: sans-serif;
-      }
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200px;
+            height: 100%;
+            background-color: rgba(30, 30, 30, 0.9);
+            color: white;
+            padding: 10px;
+            box-sizing: border-box;
+            z-index: 10;
+            font-family: sans-serif;
+            overflow-y: auto; /* Enables scroll */
+            scrollbar-width: thin;
+        }
 
-      #toolbox button {
-          display: block;
-          margin: 5px 0;
-          width: 100%;
-      }
+        .tool-category h4 {
+            cursor: pointer;
+            margin: 10px 0 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .tool-list {
+            display: none;
+            margin-left: 5px;
+        }
+
+        .tool-category.open .tool-list {
+            display: block;
+        }
+
+        #toolbox button {
+            display: block;
+            margin: 2px 0;
+            width: 100%;
+        }
 
       #help-button {
         position: absolute;
@@ -126,6 +144,10 @@
         <input type="checkbox" id="toggle-labels-checkbox" />
           Toggle Tile Labels
         </label>
+  </div>
+
+  <!-- Add more categories as needed -->
+</div>
     </div>
 
     <div id="help-button">?</div>
@@ -136,7 +158,6 @@
         <li><b>Mouse Wheel</b>: Zoom in/out</li>
         <li><b>Mouse Click</b>: Paint selected tile</li>
         <li><b>Hover</b>: Highlight tile</li>
-        <li><b>Right Click</b>: Prevented (reserved)</li>
       </ul>
 
       <hr />
@@ -145,21 +166,22 @@
       <p>A tile map sandbox for visualizing and placing hex terrain. Built with Rust + Bevy.</p>
 
       <h3>Version Info</h3>
-      <p>v0.1.0 &mdash; Last updated: July 2025</p>
+      <p>v0.1.0 &mdash; Last updated: 13 July 2025</p>
 
       <h3>Credits</h3>
       <ul>
         <li>Tile assets by <a href="https://octolust.itch.io/hexagon-tile-map" target="_blank">Octolust</a></li>
+        <li>Hexgridspiral crate by <a href="https://github.com/lucidBrot/hexgridspiral" target="_blank">Mink, Erc LucidBrot</a>
+        <li>Hexagonal Grids which informed large amounts of this project <a href="https://www.redblobgames.com/grids/hexagons" target="_blank">Red Blob Games</a>
         <li>Built with <a href="https://bevyengine.org" target="_blank">Bevy</a></li>
       </ul>
 
       <h3>Contact</h3>
-      <p>Found a bug or idea? <a href="https://github.com/yourusername/yourproject" target="_blank">GitHub repo</a> or email <a href="mailto:your@email.com">your@email.com</a></p>
+      <p>Found a bug or idea? <a href="https://github.com/D0ubleD0uble/double_hexxed" target="_blank">GitHub repo</a></p>
       
-      <!--
       <h3>License</h3>
       <p>This project is open source under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.</p>
-      -->
+
       <h3>Privacy / Terms</h3>
       <p>This project does not collect or store personal data. Hosted client-side only.</p>
     </div>
@@ -183,69 +205,101 @@
             await init();
             // Custom UI logic
             // TOOLS must match asset_loading "AssetTag"
-            const TOOLS = [
-                "Outline",
-                "Blank (white)",
-                "Lush (green)",
-                "Ocean (blue)",
-                "Rocky (gray)",
-                "Snowy (off-white)",
-                "Forest Conifer, Lush",
-                "Forest Conifer, Snowy",
-                "Forest Deciduous, Lush",
-                "Forest Mixed, Lush",
-                "Hills, Desert",
-                "Hills, Lush",
-                "Hills, Snowy",
-                "Mountain Volcano, Lush",
-                "Mountain Volcano, Rocky",
-                "Mountain Volcano, Snowy",
-                "Mountain Foothills, Lush",
-                "Mountain Foothills, Rocky",
-                "Mountain Foothills, Snowy",
-                "Mountain Low, Lush",
-                "Mountain Low, Rocky",
-                "Mountain Low, Snowy",
-                "Mountain Medium, Lush",
-                "Mountain Medium, Rocky",
-                "Mountain Medium, Snowy",
-                "Mountain Peak, Lush",
-                "Mountain Peak, Rocky",
-                "Mountain Peak, Snowy",
-                "Plains, Damp",
-                "Plains, Desert",
-                "Plains, Farmland",
-                "Plains, Lush",
-                "Ruins, Desert",
-                "Ruins, Lush",
-                "Snow area",
-                "Snow drifts",
-                "Snow field",
-                "Sparse Trees, Lush",
-                "Sparse Trees, Snowy",
-                "Urban City, Lush",
-                "Urban Farm, Lush",
-                "Urban Farmland, Lush",
-                "Urban Town, Abandoned",
-                "Urban Town, Inhabited",
-                "Urban Town Lumberyard",
-                "Urban Monastery",
-                "Urban Tower",
-                "Urban Town, Lush",
-                "Ocean Soft Waves",
-                "Ocean Still Water",
-                "Ocean Waves",
-                "Wetlands, Damp",
-            ];
+            const TOOLS_BY_CATEGORY = {
+                "Simple": [
+                    "Outline",
+                    "Blank (white)",
+                    "Lush (green)",
+                    "Ocean (blue)",
+                    "Rocky (gray)",
+                    "Snowy (off-white)"
+                ],
+                "Forests": [
+                    "Sparse Trees, Lush",
+                    "Sparse Trees, Snowy",
+                    "Forest Conifer, Lush",
+                    "Forest Conifer, Snowy",
+                    "Forest Deciduous, Lush",
+                    "Forest Mixed, Lush"
+                ],
+                "Hills": [
+                    "Hills, Desert",
+                    "Hills, Lush",
+                    "Hills, Snowy",
+                    "Mountain Foothills, Lush",
+                    "Mountain Foothills, Rocky",
+                    "Mountain Foothills, Snowy"
+                ],
+                "Mountains": [
+                    "Mountain Volcano, Lush",
+                    "Mountain Volcano, Rocky",
+                    "Mountain Volcano, Snowy",
+                    "Mountain Low, Lush",
+                    "Mountain Low, Rocky",
+                    "Mountain Low, Snowy",
+                    "Mountain Medium, Lush",
+                    "Mountain Medium, Rocky",
+                    "Mountain Medium, Snowy",
+                    "Mountain Peak, Lush",
+                    "Mountain Peak, Rocky",
+                    "Mountain Peak, Snowy"
+                ],
+                "Plains": [
+                    "Plains, Damp",
+                    "Plains, Desert",
+                    "Plains, Farmland",
+                    "Plains, Lush"
+                ],
+                "Snow": [
+                    "Snow area",
+                    "Snow drifts",
+                    "Snow field"
+                ],
+                "Urban": [
+                    "Ruins, Desert",
+                    "Ruins, Lush",
+                    "Urban City, Lush",
+                    "Urban Farm, Lush",
+                    "Urban Farmland, Lush",
+                    "Urban Town, Abandoned",
+                    "Urban Town, Inhabited",
+                    "Urban Town Lumberyard",
+                    "Urban Monastery",
+                    "Urban Tower",
+                    "Urban Town, Lush"
+                ],
+                "Water": [
+                    "Ocean Soft Waves",
+                    "Ocean Still Water",
+                    "Ocean Waves",
+                    "Wetlands, Damp"
+                ]
+            };
             const toolbox = document.getElementById("toolbox");
 
-            TOOLS.forEach(toolName => {
-              const button = document.createElement("button");
-              button.textContent = toolName;
-              button.addEventListener("click", () => {
-                wasm.set_tool(toolName);
-              });
-              toolbox.appendChild(button);
+            Object.entries(TOOLS_BY_CATEGORY).forEach(([categoryName, tools]) => {
+                const category = document.createElement("div");
+                category.className = "tool-category";
+                        
+                const header = document.createElement("h4");
+                header.textContent = `${categoryName} ▸`;
+                header.onclick = () => toggleCategory(header);
+                category.appendChild(header);
+                        
+                const toolList = document.createElement("div");
+                toolList.className = "tool-list";
+                        
+                tools.forEach(toolName => {
+                    const button = document.createElement("button");
+                    button.textContent = toolName;
+                    button.addEventListener("click", () => {
+                        wasm.set_tool(toolName);
+                    });
+                    toolList.appendChild(button);
+                });
+            
+                category.appendChild(toolList);
+                toolbox.appendChild(category);
             });
 
             const checkbox = document.getElementById("toggle-labels-checkbox");
@@ -465,6 +519,11 @@
                 controlsPanel.style.display = "none";
             }
         });
+
+        function toggleCategory(header) {
+            const category = header.parentElement;
+            category.classList.toggle('open');
+        }
     </script>
 </body>
 
