@@ -188,7 +188,7 @@ pub fn get_asset_for_tag(tag: AssetTag) -> &'static str {
 
 pub fn load_tag(asset_tag: AssetTag, asset_server: &AssetServer) -> Handle<Image> {
     let asset_path = get_asset_for_tag(asset_tag);
-    asset_server.load(format!("hextiles_rotated/{}", asset_path))
+    asset_server.load(format!("assets/hextiles_rotated/{}", asset_path))
 }
 
 // #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
