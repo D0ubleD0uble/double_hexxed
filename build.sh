@@ -5,7 +5,12 @@ set -e
 rm -rf dist/
 
 # Build the project to WebAssembly
-wasm-pack build --target web --out-dir dist/pkg
+cargo build --target wasm32-unknown-unknown --release
+
+# Run wasm-bindgen on the output binary
+wasm-bindgen target/wasm32-unknown-unknown/release/double_hexxed.wasm \
+  --out-dir dist/pkg \
+  --target web
 
 # Copy static files to dist
 cp index.html dist/

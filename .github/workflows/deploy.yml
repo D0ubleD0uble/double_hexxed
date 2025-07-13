@@ -14,15 +14,17 @@ jobs:
 
       - name: 🦀 Install Rust
         uses: dtolnay/rust-toolchain@stable
+      
+      - name: 🎯 Add wasm32 target
+        run: rustup target add wasm32-unknown-unknown
 
-      - name: 📦 Install wasm-pack
-        run: |
-          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: 🔧 Install wasm-bindgen CLI
+        run: cargo install wasm-bindgen-cli
       
       - name: 🔧 Make build.sh executable
         run: chmod +x ./build.sh
 
-      - name: 🧱 Build WASM with wasm-pack
+      - name: 🧱 Build WASM binary
         run: ./build.sh
 
       - name: 🚀 Deploy to Cloudflare Pages
