@@ -18,6 +18,9 @@ jobs:
       - name: 📦 Install wasm-pack
         run: |
           curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      
+      - name: 🔧 Make build.sh executable
+        run: chmod +x ./build.sh
 
       - name: 🧱 Build WASM with wasm-pack
         run: ./build.sh
