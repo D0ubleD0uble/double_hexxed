@@ -194,10 +194,10 @@
     <script type="module">
         const isDev = location.hostname === "localhost" || location.hostname ==="127.0.0.1";
         // {{ MODULE }}
-        import init, * as wasm from "/pkg/double_hexxed.js"
+        import __wbg_init from "/pkg/double_hexxed.js"
 
         async function run() {
-            await init("/pkg/double_hexxed_bg.wasm");
+            const wasm = await __wbg_init("/pkg/double_hexxed_bg.wasm");
             // Custom UI logic
             // TOOLS must match asset_loading "AssetTag"
             const TOOLS_BY_CATEGORY = {
