@@ -1,13 +1,15 @@
 use bevy::prelude::*;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(EnumIter, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AssetTag {
     Outline,
     Blank,
     BaseLush,
     BaseOcean,
     BaseSnowy,
-    ForestLush,
+    ForestDeciduousLush,
     ForestSnowy,
     HillsDesert,
     HillsLush,
@@ -26,7 +28,12 @@ pub enum AssetTag {
     SwampStill,
     WetlandsDamp,
     SnowField,
+    UrbanCityLush,
     // etc...
+}
+
+pub fn all_asset_tags() -> Vec<AssetTag> {
+    AssetTag::iter().collect()
 }
 
 impl AssetTag {
@@ -34,6 +41,7 @@ impl AssetTag {
         match s.to_lowercase().as_str() {
             "outline" => AssetTag::Outline,
             "blank (white)" => AssetTag::Blank,
+            "forest deciduous, lush" => AssetTag::ForestDeciduousLush,
             "mountain foothills" => AssetTag::MountainFoothillsRocky,
             "mountain low" => AssetTag::MountainLowRocky,
             "mountain medium" => AssetTag::MountainMediumRocky,
@@ -42,6 +50,7 @@ impl AssetTag {
             "mountain peak, snowy" => AssetTag::MountainPeakSnowy,
             "lush plains" => AssetTag::PlainsLush,
             "ocean waves" => AssetTag::OceanWaves,
+            "urban city, lush" => AssetTag::UrbanCityLush,
             _ => AssetTag::Blank,
         }
     }
@@ -67,6 +76,7 @@ pub fn get_asset_for_tag(tag: AssetTag) -> &'static str {
     match tag {
         AssetTag::BaseLush => "Hex - Base (lush).png",
         AssetTag::PlainsLush => "Hex - Plains (lush) 5.png",
+        AssetTag::ForestDeciduousLush => "Hex - Forest, deciduous (lush).png",
         AssetTag::MountainPeakRocky => "Hex - Mountains, peak (rocky).png",
         AssetTag::MountainPeakLush => "Hex - Mountains, peak (lush).png",
         AssetTag::MountainPeakSnowy => "Hex - Mountains, peak (snowy).png",
@@ -74,6 +84,7 @@ pub fn get_asset_for_tag(tag: AssetTag) -> &'static str {
         AssetTag::MountainLowRocky => "Hex - Mountains, low (rocky).png",
         AssetTag::MountainFoothillsRocky => "Hex - Mountains, foothills (rocky).png",
         AssetTag::OceanWaves => "Hex - Water - Ocean (waves) 1.png",
+        AssetTag::UrbanCityLush => "Hex - Urban - City (lush).png",
         AssetTag::Outline => "Hex - Base (outline).png",
         AssetTag::Blank | _ => "Hex - Base (blank).png",
     }

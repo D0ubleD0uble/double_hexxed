@@ -74,7 +74,9 @@
         position: absolute;
         bottom: 70px;
         right: 20px;
-        width: 240px;
+        width: 280px;
+        max-height: 70vh;
+        overflow-y: auto;
         background-color: rgba(30, 30, 30, 0.95);
         color: white;
         padding: 10px;
@@ -85,6 +87,35 @@
         border-radius: 6px;
         box-shadow: 0 0 8px rgba(0,0,0,0.4);
     }
+
+    #controls a {
+        color: #8ab4f8;
+        text-decoration: none;
+    }
+
+    #controls a:hover {
+        text-decoration: underline;
+    }
+
+    #attribution {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      font-size: 12px;
+      color: white;
+      background-color: rgba(30, 30, 30, 0.7);
+      padding: 4px 8px;
+      border-radius: 4px;
+      z-index: 15;
+      font-family: sans-serif;
+    }
+    #attribution a {
+      color: #8ab4f8;
+      text-decoration: none;
+    }
+    #attribution a:hover {
+      text-decoration: underline;
+    }
     </style>
 </head>
 
@@ -93,14 +124,42 @@
 
     <div id="help-button">?</div>
     <div id="controls" style="display: none;">
-        <h2>Controls</h2>
-        <ul>
-            <li><b>WASD / Arrow Keys</b>: Move camera</li>
-            <li><b>Mouse Wheel</b>: Zoom in/out</li>
-            <li><b>Mouse Click</b>: Paint selected tile</li>
-            <li><b>Hover</b>: Highlight tile</li>
-            <li><b>Right Click</b>: Prevented (reserved)</li>
-        </ul>
+      <h2>Controls</h2>
+      <ul>
+        <li><b>WASD / Arrow Keys</b>: Move camera</li>
+        <li><b>Mouse Wheel</b>: Zoom in/out</li>
+        <li><b>Mouse Click</b>: Paint selected tile</li>
+        <li><b>Hover</b>: Highlight tile</li>
+        <li><b>Right Click</b>: Prevented (reserved)</li>
+      </ul>
+
+      <hr />
+
+      <h3>About</h3>
+      <p>A tile map sandbox for visualizing and placing hex terrain. Built with Rust + Bevy.</p>
+
+      <h3>Version Info</h3>
+      <p>v0.1.0 &mdash; Last updated: July 2025</p>
+
+      <h3>Credits</h3>
+      <ul>
+        <li>Tile assets by <a href="https://octolust.itch.io/hexagon-tile-map" target="_blank">Octolust</a></li>
+        <li>Built with <a href="https://bevyengine.org" target="_blank">Bevy</a></li>
+      </ul>
+
+      <h3>Contact</h3>
+      <p>Found a bug or idea? <a href="https://github.com/yourusername/yourproject" target="_blank">GitHub repo</a> or email <a href="mailto:your@email.com">your@email.com</a></p>
+      
+      <!--
+      <h3>License</h3>
+      <p>This project is open source under the <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a>.</p>
+      -->
+      <h3>Privacy / Terms</h3>
+      <p>This project does not collect or store personal data. Hosted client-side only.</p>
+    </div>
+
+    <div id="attribution">
+        Tile assets from <a href="https://octolust.itch.io/hexagon-tile-map" target="_blank" rel="noopener noreferrer">Octolust</a>
     </div>
 
     {{ NO_MODULE }}
@@ -121,6 +180,7 @@
             const TOOLS = [
                 "Outline",
                 "Blank (white)",
+                "Forest Deciduous, Lush",
                 "Mountain Foothills",
                 "Mountain Low",
                 "Mountain Medium",
@@ -129,6 +189,7 @@
                 "Mountain Peak, Snowy",
                 "Lush Plains",
                 "Ocean Waves",
+                "Urban City, Lush"
             ];
             const toolbox = document.getElementById("toolbox");
 

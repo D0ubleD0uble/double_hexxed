@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use hexgridspiral as hgs;
 use std::collections::HashMap;
 
-use crate::asset_loading::{AssetTag, load_tag};
+use crate::asset_loading::{AssetTag, all_asset_tags, load_tag};
 use crate::components::{MainCamera, TileMarker};
 use crate::resources::{NUM_TILES, TileImageHandles};
 use crate::tile_config::{image_size, step_size};
@@ -21,19 +21,7 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 
     // Load images for several asset tags.
-    let tags_to_load = vec![
-        AssetTag::Blank,
-        AssetTag::Outline,
-        AssetTag::BaseLush,
-        AssetTag::PlainsLush,
-        AssetTag::MountainFoothillsRocky,
-        AssetTag::MountainLowRocky,
-        AssetTag::MountainMediumRocky,
-        AssetTag::MountainPeakRocky,
-        AssetTag::MountainPeakLush,
-        AssetTag::MountainPeakSnowy,
-        AssetTag::OceanWaves,
-    ];
+    let tags_to_load = all_asset_tags();
 
     let tag_to_handles: HashMap<AssetTag, Handle<Image>> = tags_to_load
         .into_iter()
