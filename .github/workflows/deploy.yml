@@ -18,14 +18,21 @@ jobs:
       - name: 🎯 Add wasm32 target
         run: rustup target add wasm32-unknown-unknown
 
-      - name: 🔧 Install wasm-bindgen CLI
+      - name: 📦 Install wasm-bindgen CLI
         run: cargo install wasm-bindgen-cli
+      
+      - name: 📦 Install wasm-tools
+        run: cargo install wasm-tools
       
       - name: 🔧 Make build.sh executable
         run: chmod +x ./build.sh
 
       - name: 🧱 Build WASM binary
         run: ./build.sh
+
+      - name: ✂️ Strip WASM file
+        run: |
+          wasm-tools strip dist/pkg/double_hexxed_bg.wasm
 
       - name: 🚀 Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@1
