@@ -1,14 +1,11 @@
 #!/bin/bash
+set -e
 
-# Clean previous output
+cargo install wasm-bindgen-cli
+
 rm -rf dist/
+cargo build --release --target wasm32-unknown-unknown
+wasm-bindgen --target web --out-dir dist/pkg target/wasm32-unknown-unknown/release/*.wasm
 
-# Build the project to WebAssembly
-wasm-pack build --target web --out-dir dist/pkg
-
-# Copy static assets (HTML, CSS, JS) to dist
 cp index.html dist/
 cp -r assets dist/
-
-# Make it executable
-chmod +x build.sh
