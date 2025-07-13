@@ -15,10 +15,18 @@ use systems::{
 };
 use wasm_bindgen::prelude::*;
 
-use crate::asset_loading::AssetTag;
+use crate::{
+    asset_loading::AssetTag,
+    resources::ShowTileLabels,
+    systems::labels::{
+        ToggleTileLabelsEvent, flush_tile_label_toggle_queue, handle_toggle_tile_labels_event,
+        toggle_tile_labels_system,
+    },
+};
 
 /// Global queue used to forward tool events from JavaScript to Bevy.
 pub static TOOL_QUEUE: Lazy<Mutex<Vec<HexSelectedEvent>>> = Lazy::new(|| Mutex::new(Vec::new()));
+pub static LABEL_QUEUE: Lazy<Mutex<Vec<()>>> = Lazy::new(|| Mutex::new(Vec::new()));
 
 /// External JavaScript function used for logging (when compiled to WebAssembly).
 #[wasm_bindgen]
@@ -32,6 +40,12 @@ pub fn set_tool(tool: &str) {
     log::warn!("Tool selected in Rust: {}", tool);
     let event = HexSelectedEvent(tool.to_string());
     TOOL_QUEUE.lock().unwrap().push(event);
+}
+
+/// Called from JavaScript to toggle text labels
+#[wasm_bindgen]
+pub fn set_show_tile_labels(value: bool) {
+    LABEL_QUEUE.lock().unwrap().push(());
 }
 
 fn main() {
@@ -50,12 +64,17 @@ fn main() {
         )
         .add_event::<MouseWheel>()
         .add_event::<HexSelectedEvent>()
+        .add_event::<ToggleTileLabelsEvent>()
         .insert_resource(WorldCoords::default())
         .insert_resource(HoveredTile::default())
         .insert_resource(SelectedHex(AssetTag::from_str("Erase")))
+        .insert_resource(ShowTileLabels(false))
         .add_systems(Startup, setup)
         .add_systems(Update, flush_click_events_system)
         .add_systems(Update, on_hex_selected)
         .add_systems(Update, cursor_system)
+        .add_systems(Update, flush_tile_label_toggle_queue)
+        .add_systems(Update, handle_toggle_tile_labels_event)
+        .add_systems(Update, toggle_tile_labels_system)
         .run();
 }

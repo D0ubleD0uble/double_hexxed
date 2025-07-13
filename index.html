@@ -120,7 +120,13 @@
 </head>
 
 <body>
-    <div id="toolbox"></div>
+    <div id="toolbox">
+        <!-- buttons here -->
+        <label style="display:block; margin-top:10px;">
+        <input type="checkbox" id="toggle-labels-checkbox" />
+          Toggle Tile Labels
+        </label>
+    </div>
 
     <div id="help-button">?</div>
     <div id="controls" style="display: none;">
@@ -180,16 +186,56 @@
             const TOOLS = [
                 "Outline",
                 "Blank (white)",
+                "Lush (green)",
+                "Ocean (blue)",
+                "Rocky (gray)",
+                "Snowy (off-white)",
+                "Forest Conifer, Lush",
+                "Forest Conifer, Snowy",
                 "Forest Deciduous, Lush",
-                "Mountain Foothills",
-                "Mountain Low",
-                "Mountain Medium",
-                "Mountain Peak, Rocky",
+                "Forest Mixed, Lush",
+                "Hills, Desert",
+                "Hills, Lush",
+                "Hills, Snowy",
+                "Mountain Volcano, Lush",
+                "Mountain Volcano, Rocky",
+                "Mountain Volcano, Snowy",
+                "Mountain Foothills, Lush",
+                "Mountain Foothills, Rocky",
+                "Mountain Foothills, Snowy",
+                "Mountain Low, Lush",
+                "Mountain Low, Rocky",
+                "Mountain Low, Snowy",
+                "Mountain Medium, Lush",
+                "Mountain Medium, Rocky",
+                "Mountain Medium, Snowy",
                 "Mountain Peak, Lush",
+                "Mountain Peak, Rocky",
                 "Mountain Peak, Snowy",
-                "Lush Plains",
+                "Plains, Damp",
+                "Plains, Desert",
+                "Plains, Farmland",
+                "Plains, Lush",
+                "Ruins, Desert",
+                "Ruins, Lush",
+                "Snow area",
+                "Snow drifts",
+                "Snow field",
+                "Sparse Trees, Lush",
+                "Sparse Trees, Snowy",
+                "Urban City, Lush",
+                "Urban Farm, Lush",
+                "Urban Farmland, Lush",
+                "Urban Town, Abandoned",
+                "Urban Town, Inhabited",
+                "Urban Town Lumberyard",
+                "Urban Monastery",
+                "Urban Tower",
+                "Urban Town, Lush",
+                "Ocean Soft Waves",
+                "Ocean Still Water",
                 "Ocean Waves",
-                "Urban City, Lush"
+                "Wetlands, Damp",
             ];
             const toolbox = document.getElementById("toolbox");
 
@@ -200,6 +246,11 @@
                 wasm.set_tool(toolName);
               });
               toolbox.appendChild(button);
+            });
+
+            const checkbox = document.getElementById("toggle-labels-checkbox");
+            checkbox.addEventListener("change", () => {
+                wasm.set_show_tile_labels(checkbox.checked);
             });
         }
 

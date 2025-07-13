@@ -24,3 +24,6 @@ pub struct WorldCoords(pub(crate) Vec2);
 pub struct HoveredTile {
     entity: Option<hgs::CCTile>,
 }
+
+#[derive(Resource, Default)]
+pub struct ShowTileLabels(pub bool);

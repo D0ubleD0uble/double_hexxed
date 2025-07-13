@@ -1,4 +1,5 @@
 pub mod cursor;
+pub mod labels;
 pub mod setup;
 pub mod tools;
 
