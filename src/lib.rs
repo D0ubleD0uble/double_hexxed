@@ -48,7 +48,8 @@ pub fn set_show_tile_labels(value: bool) {
     LABEL_QUEUE.lock().unwrap().push(());
 }
 
-fn main() {
+#[wasm_bindgen(start)]
+pub fn start() {
     let mut app = App::new()
         .add_plugins(
             (DefaultPlugins.set(WindowPlugin {

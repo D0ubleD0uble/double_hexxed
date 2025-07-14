@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:,">
-    <title>{{ TITLE }}</title>
+    <title>Double Hexxed</title>
 
     <style>
         body,
@@ -190,14 +190,14 @@
         Tile assets from <a href="https://octolust.itch.io/hexagon-tile-map" target="_blank" rel="noopener noreferrer">Octolust</a>
     </div>
 
-    {{ NO_MODULE }}
     <script type="module">
         const isDev = location.hostname === "localhost" || location.hostname ==="127.0.0.1";
         // {{ MODULE }}
-        import __wbg_init from "/pkg/double_hexxed.js"
+        import init, { set_tool, set_show_tile_labels } from "./pkg/double_hexxed.js"
 
         async function run() {
-            const wasm = await __wbg_init("/pkg/double_hexxed_bg.wasm");
+            await init();
+            // const wasm = await __wbg_init("/pkg/double_hexxed_bg.wasm");
             // Custom UI logic
             // TOOLS must match asset_loading "AssetTag"
             const TOOLS_BY_CATEGORY = {
