@@ -19,12 +19,15 @@ wasm-pack build --target web --release
 
 # SCP the files
 Write-Host "Deploying index.html..."
-scp index.html "$remoteUser@$remoteHost:$remotePath/"
+scp index.html "${remoteUser}@${remoteHost}:${remotePath}/"
 
 Write-Host "Deploying pkg/ directory..."
-scp -r ./pkg "$remoteUser@$remoteHost:$remotePath/"
+scp -r ./pkg "${remoteUser}@${remoteHost}:${remotePath}/"
 
 Write-Host "Deploying assets/ directory..."
-scp -r ./assets "$remoteUser@$remoteHost:$remotePath/"
+Write-Host "Skipping assets/ directory..."
+# scp -r ./assets "${remoteUser}@${remoteHost}:${remotePath}/"
+
+ssh "${remoteUser}@${remoteHost}" "chmod -R 755 '${remotePath}'"
 
 Write-Host "Deployment complete."

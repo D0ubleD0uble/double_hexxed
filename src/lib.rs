@@ -4,7 +4,7 @@ mod resources;
 mod systems;
 mod tile_config;
 
-use bevy::{input::mouse::MouseWheel, prelude::*};
+use bevy::{asset::AssetMetaCheck, input::mouse::MouseWheel, prelude::*};
 use once_cell::sync::Lazy;
 use resources::{HoveredTile, SelectedHex, WorldCoords};
 use std::sync::Mutex;
@@ -52,16 +52,21 @@ pub fn set_show_tile_labels(value: bool) {
 pub fn start() {
     let mut app = App::new()
         .add_plugins(
-            (DefaultPlugins.set(WindowPlugin {
-                primary_window: Some(Window {
-                    // fill the entire browser window
-                    fit_canvas_to_parent: true,
-                    // don't hijack keyboard shortcuts like F5, F6, F12, Ctrl+R etc.
-                    // prevent_default_event_handling: false,
+            (DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        // fill the entire browser window
+                        fit_canvas_to_parent: true,
+                        // don't hijack keyboard shortcuts like F5, F6, F12, Ctrl+R etc.
+                        // prevent_default_event_handling: false,
+                        ..default()
+                    }),
                     ..default()
-                }),
-                ..default()
-            })),
+                })
+                .set(AssetPlugin {
+                    meta_check: AssetMetaCheck::Never,
+                    ..default()
+                })),
         )
         .add_event::<MouseWheel>()
         .add_event::<HexSelectedEvent>()
