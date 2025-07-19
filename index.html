@@ -193,7 +193,7 @@
     <script type="module">
         const isDev = location.hostname === "localhost" || location.hostname ==="127.0.0.1";
         // {{ MODULE }}
-        import init, { set_tool, set_show_tile_labels } from "./double_hexxed.js"
+        import init, { start, set_tool, set_show_tile_labels } from "./double_hexxed.js"
 
         async function run() {
             await init();
@@ -301,6 +301,8 @@
             checkbox.addEventListener("change", () => {
                 wasm.set_show_tile_labels(checkbox.checked);
             });
+
+            start();
         }
 
         if (isDev) {
