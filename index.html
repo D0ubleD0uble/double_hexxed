@@ -139,15 +139,29 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      background-color: rgba(255, 200, 0, 0.9);
+      background-color: rgba(255, 200, 0, 0.95);
       color: black;
       font-weight: bold;
       font-family: sans-serif;
-      padding: 8px 12px;
+      padding: 8px 36px 8px 12px;
       border-radius: 4px;
       box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
       z-index: 25;
       font-size: 14px;
+    }
+
+    #alpha-disclaimer span#alpha-close {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    #alpha-disclaimer span#alpha-close:hover {
+      color: #333;
     }
     </style>
 </head>
@@ -207,6 +221,7 @@
 
     <div id="alpha-disclaimer">
         ⚠️ This is an <strong>Alpha</strong> version. Features may be incomplete or unstable.
+        <span id="alpha-close" title="Dismiss">✕</span>
     </div>
 
     <script type="module">
