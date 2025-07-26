@@ -46,10 +46,22 @@ canvas:focus {
     display: block;
 }
 
+.tile-group:has(.tile-button:not([hidden])) {
+  display: block;
+}
+
+.tile-group:not(:has(.tile-button:not([hidden]))) {
+  display: none;
+}
+
 .tile-button {
     display: block;
     margin: 2px 0;
     width: 100%;
+}
+
+.tile-button[hidden] {
+  display: none;
 }
 
 #help-button {

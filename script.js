@@ -86,3 +86,13 @@ function toggleGroup(header) {
 document.getElementById("alpha-close").addEventListener("click", () => {
     document.getElementById("alpha-disclaimer").style.display = "none";
 });
+
+document.getElementById('tile-filter').addEventListener('input', (event) => {
+  const query = event.target.value.trim().toLowerCase();
+  const buttons = document.querySelectorAll('.tile-button');
+
+  buttons.forEach(button => {
+    const label = button.textContent.toLowerCase();
+    button.hidden = !label.includes(query);
+  });
+});
