@@ -7,7 +7,7 @@ edition = "2024"
 crate-type = ["cdylib"]
 
 [dependencies]
-bevy = "0.15"
+bevy = { version = "0.15", features = ["webp"] }
 getrandom = { version = "0.3.3", features = ["wasm_js"] }
 hexgridspiral = { git = "https://github.com/D0ubleD0uble/hexgridspiral.git", branch = "feature/support_unregular_hexes" }
 log = { version = "*", features = ["max_level_debug", "release_max_level_warn"] }
