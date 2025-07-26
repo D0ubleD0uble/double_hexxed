@@ -1,5 +1,7 @@
+use bevy::asset::RenderAssetUsages;
 use bevy::color::palettes::css;
 use bevy::prelude::*;
+use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat};
 use hexgridspiral as hgs;
 use std::collections::HashMap;
 
@@ -9,7 +11,11 @@ use crate::resources::{NUM_TILES, TileImageHandles};
 use crate::tile_config::{image_size, step_size};
 
 /// Bevy startup system: sets up the 2D camera, loads assets, and spawns all tiles.
-pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut images: ResMut<Assets<Image>>,
+) {
     // Spawn main camera with a blue-gray background color.
     commands.spawn((
         Camera2d,
@@ -23,10 +29,14 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Load images for several asset tags.
     let tags_to_load = all_asset_tags();
 
-    let tag_to_handles: HashMap<AssetTag, Handle<Image>> = tags_to_load
+    let transparent_img = create_transparent_image(&mut images);
+
+    let mut tag_to_handles: HashMap<AssetTag, Handle<Image>> = tags_to_load
         .into_iter()
-        .map(|tag| (tag, load_tag(tag, &asset_server)))
+        .map(|tag| (tag, load_tag(tag, &asset_server, transparent_img.clone())))
         .collect();
+
+    tag_to_handles.insert(AssetTag::None, transparent_img);
 
     let start_image =
         get_image_handle(&tag_to_handles, &AssetTag::Blank).expect("Failed to load default image");
@@ -48,6 +58,23 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             start_image.clone(),
         );
     }
+}
+
+fn create_transparent_image(images: &mut Assets<Image>) -> Handle<Image> {
+    let size = Extent3d {
+        width: 1,
+        height: 1,
+        depth_or_array_layers: 1,
+    };
+    let data = vec![0, 0, 0, 0]; // RGBA: fully transparent
+    let image = Image::new_fill(
+        size,
+        TextureDimension::D2,
+        &data,
+        TextureFormat::Rgba8UnormSrgb,
+        RenderAssetUsages::RENDER_WORLD,
+    );
+    images.add(image)
 }
 
 /// Extracts an image handle from the asset map for a given tag and index.

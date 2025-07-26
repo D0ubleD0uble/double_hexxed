@@ -11,7 +11,7 @@ pub fn on_hex_selected(
     mut selected: ResMut<SelectedHex>,
 ) {
     for event in events.read() {
-        log::warn!("Tool selected via event: {}", event.0);
+        // log::warn!("Tool selected via event: {}", event.0);
         selected.0 = AssetTag::from_str(&event.0);
     }
 }
