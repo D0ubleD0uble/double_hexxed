@@ -30,23 +30,23 @@ canvas:focus {
     scrollbar-width: thin;
 }
 
-.tool-category h4 {
+.tile-group h4 {
     cursor: pointer;
     margin: 10px 0 5px;
     font-size: 14px;
     font-weight: bold;
 }
 
-.tool-list {
+.tile-list {
     display: none;
     margin-left: 5px;
 }
 
-.tool-category.open .tool-list {
+.tile-group.open .tile-list {
     display: block;
 }
 
-#toolbox button {
+.tile-button {
     display: block;
     margin: 2px 0;
     width: 100%;

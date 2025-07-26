@@ -4,6 +4,7 @@ use strum_macros::EnumIter;
 
 #[derive(EnumIter, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AssetTag {
+    None,
     Outline,
     Blank,
     BaseLush,
@@ -121,13 +122,14 @@ impl AssetTag {
             "ocean still water" => AssetTag::OceanStill,
             "ocean waves" => AssetTag::OceanWaves,
             "wetlands, damp" => AssetTag::WetlandsDamp,
-            _ => AssetTag::Blank,
+            _ => AssetTag::None,
         }
     }
 }
 
 pub fn get_asset_for_tag(tag: AssetTag) -> &'static str {
     match tag {
+        AssetTag::Blank => "Hex - Base (blank).webp",
         AssetTag::Outline => "Hex - Base (outline).webp",
         AssetTag::BaseLush => "Hex - Base (lush).webp",
         AssetTag::BaseOcean => "Hex - Base (ocean).webp",
@@ -182,7 +184,7 @@ pub fn get_asset_for_tag(tag: AssetTag) -> &'static str {
         AssetTag::SwampStill => "Hex - Water - Swamp (still water) 1.webp",
         AssetTag::SwanpWaves => "Hex - Water - Swamp (waves) 1.webp",
         AssetTag::WetlandsDamp => "Hex - Wetlands (damp) 1.webp",
-        AssetTag::Blank | _ => "Hex - Base (blank).webp",
+        _ => "",
     }
 }
 

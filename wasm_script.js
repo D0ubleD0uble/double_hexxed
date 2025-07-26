@@ -1,5 +1,5 @@
 
-import init, { set_tool, set_show_tile_labels } from "./pkg/double_hexxed.js"
+import init, { set_tile, set_show_tile_labels } from "./pkg/double_hexxed.js"
 run();
 
 async function run() {
@@ -17,9 +17,10 @@ async function run() {
     }
     
     // Custom UI logic
-    // TOOLS must match asset_loading "AssetTag"
-    const TOOLS_BY_CATEGORY = {
+    // TILES must match asset_loading "AssetTag"
+    const TILES_BY_GROUP = {
         "Simple": [
+            "Delete",
             "Outline",
             "Blank (white)",
             "Lush (green)",
@@ -90,29 +91,30 @@ async function run() {
     };
     const toolbox = document.getElementById("toolbox");
     
-    Object.entries(TOOLS_BY_CATEGORY).forEach(([categoryName, tools]) => {
-        const category = document.createElement("div");
-        category.className = "tool-category";
+    Object.entries(TILES_BY_GROUP).forEach(([groupName, tiles]) => {
+        const group = document.createElement("div");
+        group.className = "tile-group";
                 
         const header = document.createElement("h4");
-        header.textContent = `${categoryName} ▸`;
-        header.onclick = () => toggleCategory(header);
-        category.appendChild(header);
+        header.textContent = `${groupName} ▸`;
+        header.onclick = () => toggleGroup(header);
+        group.appendChild(header);
                 
-        const toolList = document.createElement("div");
-        toolList.className = "tool-list";
+        const tileList = document.createElement("div");
+        tileList.className = "tile-list";
                 
-        tools.forEach(toolName => {
+        tiles.forEach(tileName => {
             const button = document.createElement("button");
-            button.textContent = toolName;
+            button.className = "tile-button";
+            button.textContent = tileName;
             button.addEventListener("click", () => {
-                set_tool(toolName);
+                set_tile(tileName);
             });
-            toolList.appendChild(button);
+            tileList.appendChild(button);
         });
     
-        category.appendChild(toolList);
-        toolbox.appendChild(category);
+        group.appendChild(tileList);
+        toolbox.appendChild(group);
     });
     
     const checkbox = document.getElementById("toggle-labels-checkbox");

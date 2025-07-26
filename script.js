@@ -78,9 +78,9 @@ helpButton.addEventListener("click", () => {
     }
 });
 
-function toggleCategory(header) {
-    const category = header.parentElement;
-    category.classList.toggle('open');
+function toggleGroup(header) {
+    const group = header.parentElement;
+    group.classList.toggle('open');
 }
 
 document.getElementById("alpha-close").addEventListener("click", () => {

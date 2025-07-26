@@ -122,10 +122,10 @@ pub fn cursor_system(
                     // If clicked, apply hex
                     if buttons.pressed(MouseButton::Left) {
                         tile_marker.tag = selected_hex.0;
-                    }
 
-                    if let Some(handle) = tile_image_handles.handles.get(&tile_marker.tag) {
-                        sprite.image = handle.clone();
+                        if let Some(handle) = tile_image_handles.handles.get(&tile_marker.tag) {
+                            sprite.image = handle.clone();
+                        }
                     }
                 } else {
                     // Reset pop-out effect

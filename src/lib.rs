@@ -36,9 +36,9 @@ extern "C" {
 
 /// Called from JavaScript to set the current tool.
 #[wasm_bindgen]
-pub fn set_tool(tool: &str) {
-    log::warn!("Tool selected in Rust: {}", tool);
-    let event = HexSelectedEvent(tool.to_string());
+pub fn set_tile(tile: &str) {
+    log::warn!("Tool selected in Rust: {}", tile);
+    let event = HexSelectedEvent(tile.to_string());
     TOOL_QUEUE.lock().unwrap().push(event);
 }
 
