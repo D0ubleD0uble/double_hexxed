@@ -4,13 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <title>Double Hexxed</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
+    <button id="toolbox-toggle" class="mobile-only" aria-label="Toggle toolbox">
+        <span class="hamburger-icon"></span>
+    </button>
+
+    <div id="toolbox-overlay" class="mobile-only"></div>
+
     <div id="toolbox">
         <input type="text" id="tile-filter" placeholder="Filter tiles...">
         <!-- buttons here -->
@@ -24,14 +30,28 @@
 </div>
     </div>
 
+    <div id="mobile-zoom-controls" class="mobile-only">
+        <button id="zoom-in" aria-label="Zoom in">+</button>
+        <button id="zoom-out" aria-label="Zoom out">−</button>
+    </div>
+
     <div id="help-button">?</div>
     <div id="controls" style="display: none;">
       <h2>Controls</h2>
+      <h3>Desktop</h3>
       <ul>
         <li><b>WASD / Arrow Keys</b>: Move camera</li>
         <li><b>Mouse Wheel</b>: Zoom in/out</li>
         <li><b>Mouse Click</b>: Paint selected tile</li>
         <li><b>Hover</b>: Highlight tile</li>
+      </ul>
+      <h3>Mobile / Touch</h3>
+      <ul>
+        <li><b>Two-finger drag</b>: Move camera</li>
+        <li><b>Pinch</b>: Zoom in/out</li>
+        <li><b>+/− buttons</b>: Alternative zoom controls</li>
+        <li><b>Tap</b>: Paint selected tile</li>
+        <li><b>Menu icon (top-left)</b>: Open/close tile toolbox</li>
       </ul>
 
       <hr />
